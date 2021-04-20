@@ -1,0 +1,41 @@
+package burp;
+
+import java.awt.Component;
+import java.io.PrintWriter;
+import com.protect7.crossrequestchecker.controller.HttpListener;
+import com.protect7.crossrequestchecker.gui.IssueTableModel;
+import com.protect7.crossrequestchecker.gui.MainPanel;
+import com.protect7.crossrequestchecker.util.CurrentConfig;
+
+public class BurpExtender implements IBurpExtender, ITab { 
+
+	private final CurrentConfig config = CurrentConfig.getCurrentConfig();
+	private final IssueTableModel tableModel = new IssueTableModel();
+	private MainPanel panel;
+	public static IBurpExtenderCallbacks callbacks;
+
+
+
+	public String getTabCaption() {
+		return "Cross Request Checker";
+	}
+
+	public Component getUiComponent() {
+		return panel;
+	}
+
+	public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks) {
+		BurpExtender.callbacks = callbacks;
+		System.out.println("Cross Request Checker started");
+		callbacks.setExtensionName("Cross Request Checker");
+		config.init(callbacks);
+		panel = new MainPanel(tableModel);
+		callbacks.addSuiteTab(this);
+		callbacks.registerHttpListener(new HttpListener(callbacks, tableModel));
+		PrintWriter stdout = new PrintWriter(callbacks.getStdout(), true);
+        stdout.println("Cross Request Checker successfully started");
+        stdout.println("Version 0.1.3");
+        stdout.println("Protect7 GmbH");
+	}
+
+}

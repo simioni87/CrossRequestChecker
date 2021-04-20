@@ -1,0 +1,75 @@
+package com.protect7.crossrequestchecker.gui;
+
+import java.awt.BorderLayout;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import burp.IHttpRequestResponse;
+import burp.IScanIssue;
+
+public class CenterPanel extends JPanel {
+
+	private static final long serialVersionUID = 8472627619821851125L;
+
+	public CenterPanel(final IssueTableModel tableModel) {
+		setLayout(new BorderLayout());
+
+		final JTable table = new JTable();
+		table.setModel(tableModel);
+		add(new JScrollPane(table));
+		table.setAutoCreateRowSorter(true);
+
+		JTabbedPane tabbedPane = new JTabbedPane();
+
+		final JTextArea requestText = new JTextArea();
+		requestText.setEditable(false);
+
+		final JTextArea responseText = new JTextArea();
+		responseText.setEditable(false);
+
+		JScrollPane requestScrollPane = new JScrollPane(requestText);
+		tabbedPane.add("Request", requestScrollPane);
+		JScrollPane responseScrollPane = new JScrollPane(responseText);
+		tabbedPane.add("Response", responseScrollPane);
+
+		add(tabbedPane);
+		ListSelectionModel selectionModel = table.getSelectionModel();
+		selectionModel.addListSelectionListener(new ListSelectionListener() {
+
+			public void valueChanged(ListSelectionEvent e) {
+				if(table.getSelectedRow() != -1) {
+					changeRequestResponseView(table, tableModel, requestText, responseText);
+				}
+			}
+		});
+
+		JSplitPane  splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, new JScrollPane(table), tabbedPane);
+		splitPane.setResizeWeight(0.5);
+		splitPane.setDividerSize(5);
+		add(splitPane, BorderLayout.CENTER);
+
+	}
+
+	private void changeRequestResponseView(JTable table, IssueTableModel tableModel, JTextArea requestText,
+			JTextArea responseText) {
+		IScanIssue issue = tableModel.getScanIssueAtRow(table.convertRowIndexToModel(table.getSelectedRow()));
+		IHttpRequestResponse messageInfo = issue.getHttpMessages()[0];
+		if (messageInfo != null) {
+			requestText.setText(new String(messageInfo.getRequest()));
+			responseText.setText(new String(messageInfo.getResponse()));
+		}
+		
+	    requestText.setSelectionStart(0);
+	    requestText.setSelectionEnd(0);
+	    
+	    responseText.setSelectionStart(0);
+	    responseText.setSelectionEnd(0);
+	}
+
+}
